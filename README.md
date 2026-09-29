@@ -74,26 +74,82 @@ git add -A && git commit -m "novas questões de ciências" && git push
 
 ## Hospedar no seu servidor
 
-É estático puro — sem build, sem backend, sem dependência externa além das fontes do
-Google Fonts. Basta copiar a pasta.
+É estático puro — 228 KB, sem build, sem backend, sem banco. O único recurso externo são
+as fontes do Google Fonts. Basta copiar a pasta e apontar o nginx para ela.
+
+Os arquivos em `deploy/` já estão preenchidos para a instalação real:
+
+| | |
+|---|---|
+| Domínio | `ifsc.sohan.sbs` |
+| Servidor | `root@192.168.88.42`, SSH na porta 2222 (Debian 12) |
+| Pasta | `/var/www/bancada-ifsc` |
+| IP público | `200.152.8.138` (Directnet, AS28590) |
+
+### Por que a Cloudflare está no meio
+
+A operadora deste link **bloqueia a porta 80 de entrada**. Comprovação: uma porta sem
+regra de encaminhamento no roteador responde `ECONNREFUSED`, e a 443 completa handshake
+TLS normalmente — mas a 80 dá *timeout*, ou seja, o pacote é descartado antes de chegar.
+Não é ajuste de roteador; é política da operadora.
+
+Isso tem duas consequências:
+
+1. **Nada de certbot.** O desafio HTTP-01 da Let's Encrypt precisa da porta 80. Em vez
+   dele usamos um **Origin Certificate da Cloudflare**, válido por 15 anos, emitido a
+   partir de um CSR gerado no próprio servidor — a chave privada nunca sai de lá.
+2. **Quem atende `http://` é a Cloudflare**, não este nginx. Com o proxy ligado (nuvem
+   laranja) o caminho é `visitante → Cloudflare:443 → servidor:443`.
+
+De quebra, o IP residencial fica escondido e uma troca de IP dinâmico não derruba o site.
+
+### Deploy do conteúdo
 
 ```bash
-rsync -av --delete ./ usuario@servidor:/var/www/bancada-ifsc/
+SSH_PORT=2222 ./deploy/deploy.sh root@192.168.88.42
 ```
 
-Nginx:
+O `--delete` deixa o servidor idêntico à sua pasta local. É esse o comando para republicar
+depois de acrescentar questões.
 
-```nginx
-server {
-    listen 80;
-    server_name bancada.seudominio.com.br;
-    root /var/www/bancada-ifsc;
-    index index.html;
-    location / { try_files $uri $uri/ /index.html; }
-}
+### Instalar ou atualizar o nginx
+
+```bash
+scp -P 2222 deploy/nginx.conf root@192.168.88.42:/tmp/bancada-ifsc.conf
+ssh -p 2222 root@192.168.88.42
+mv /tmp/bancada-ifsc.conf /etc/nginx/sites-available/bancada-ifsc
+ln -s /etc/nginx/sites-available/bancada-ifsc /etc/nginx/sites-enabled/   # só na 1ª vez
+nginx -t && systemctl reload nginx
 ```
 
-Depois rode `certbot --nginx -d bancada.seudominio.com.br` para o HTTPS.
+`deploy/nginx.conf` é a fonte da verdade — nada edita esse arquivo no servidor, então
+sobrescrever é sempre seguro. (Foi por isso que evitamos `certbot --nginx`: ele reescreve
+o arquivo no servidor, e o próximo `scp` apagaria o bloco TLS.)
+
+Detalhes que o arquivo resolve e são fáceis de perder:
+
+- **`set_real_ip_from` + `real_ip_header CF-Connecting-IP`** — sem isso todo acesso
+  aparece no log com IP da Cloudflare em vez do IP de quem visitou.
+- **`geo $realip_remote_addr`** — a lista de origens permitidas precisa olhar o IP de quem
+  *abriu a conexão*. O padrão do `geo` é `$remote_addr`, que o `real_ip_header` já
+  reescreveu para o visitante final; usar o padrão daria 403 em todo acesso legítimo.
+- **`listen 443 ssl http2`** — no nginx 1.22 do Debian 12 o http2 é sufixo do `listen`.
+  A diretiva `http2 on;` só existe a partir da 1.25.1.
+- O vhost do OpenMediaVault é o `default_server` da porta 80 e não é tocado.
+
+### Acesso pela rede local
+
+`http://192.168.88.42:8800` — sem DNS, sem Cloudflare, sem TLS. Útil quando a internet
+está fora ou para testar antes de publicar.
+
+### Renovação do certificado
+
+Não tem. O Origin Certificate vale 15 anos e o certificado que o visitante vê é gerenciado
+pela Cloudflare. Se um dia sair da Cloudflare, aí sim volta a fazer sentido o certbot —
+e nesse caso pelo desafio DNS-01, nunca HTTP-01, enquanto a porta 80 estiver bloqueada.
+
+> O progresso de cada pessoa fica no `localStorage` do navegador dela. Publicar o site não
+> junta nem compartilha progresso entre quem usa — cada dispositivo tem o seu.
 
 ## Adicionar questões
 
