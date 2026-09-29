@@ -81,27 +81,34 @@ Os arquivos em `deploy/` já estão preenchidos para a instalação real:
 
 | | |
 |---|---|
-| Domínio | `ifsc.sohan.sbs` |
-| Servidor | `root@192.168.88.42`, SSH na porta 2222 (Debian 12) |
+| Domínio | `ifsc.sohan.sbs` (DNS na Cloudflare) |
+| Servidor | `root@192.168.88.42`, SSH na porta 2222 (Debian 12, x86_64) |
 | Pasta | `/var/www/bancada-ifsc` |
-| IP público | `200.152.8.138` (Directnet, AS28590) |
+| nginx | porta **8800**, HTTP puro, só localhost e LAN |
+| Exposição | **Cloudflare Tunnel** (`cloudflared` como serviço systemd) |
 
-### Por que a Cloudflare está no meio
+### Por que um túnel, e não port-forward
 
-A operadora deste link **bloqueia a porta 80 de entrada**. Comprovação: uma porta sem
-regra de encaminhamento no roteador responde `ECONNREFUSED`, e a 443 completa handshake
-TLS normalmente — mas a 80 dá *timeout*, ou seja, o pacote é descartado antes de chegar.
-Não é ajuste de roteador; é política da operadora.
+A operadora deste link (Directnet, AS28590) **descarta as portas 80 e 443 de entrada**.
+Medido com `check-host.net` de 39 pontos do mundo: 0 alcançam a 443, 0 alcançam a 80, e
+12 de 12 alcançam a 25565 (Minecraft) — ou seja, o roteador encaminha bem; é a operadora
+que filtra as duas portas web.
 
-Isso tem duas consequências:
+Cuidado com um falso positivo que custou tempo: testar `https://200.152.8.138` **de dentro
+da própria rede** funciona, porque o roteador faz hairpin NAT. Isso inclui qualquer
+ferramenta que rode na sua máquina. Só um ponto de vista realmente externo (celular no 4G,
+`check-host.net`) diz a verdade sobre a porta.
 
-1. **Nada de certbot.** O desafio HTTP-01 da Let's Encrypt precisa da porta 80. Em vez
-   dele usamos um **Origin Certificate da Cloudflare**, válido por 15 anos, emitido a
-   partir de um CSR gerado no próprio servidor — a chave privada nunca sai de lá.
-2. **Quem atende `http://` é a Cloudflare**, não este nginx. Com o proxy ligado (nuvem
-   laranja) o caminho é `visitante → Cloudflare:443 → servidor:443`.
+Com as duas portas mortas, "expor o nginx" não é uma opção. O `cloudflared` abre uma
+conexão de **saída** para a Cloudflare e os visitantes chegam por ela:
 
-De quebra, o IP residencial fica escondido e uma troca de IP dinâmico não derruba o site.
+```
+visitante ──443──> Cloudflare <══túnel══ cloudflared (servidor) ──http──> nginx :8800
+```
+
+Consequências boas: nenhum port-forward (pode apagar os de 80/443 no roteador), IP
+residencial escondido, IP dinâmico irrelevante, HTTPS gerido pela Cloudflare, e `http://`
+também funciona. Nada de certbot — não há certificado no servidor.
 
 ### Deploy do conteúdo
 
@@ -123,30 +130,32 @@ nginx -t && systemctl reload nginx
 ```
 
 `deploy/nginx.conf` é a fonte da verdade — nada edita esse arquivo no servidor, então
-sobrescrever é sempre seguro. (Foi por isso que evitamos `certbot --nginx`: ele reescreve
-o arquivo no servidor, e o próximo `scp` apagaria o bloco TLS.)
+sobrescrever é sempre seguro. O vhost do OpenMediaVault é o `default_server` da porta 80 e
+não é tocado.
 
-Detalhes que o arquivo resolve e são fáceis de perder:
+O único detalhe não óbvio no arquivo: `set_real_ip_from 127.0.0.1` + `real_ip_header
+CF-Connecting-IP`. O cloudflared conecta de localhost e manda o IP do visitante nesse
+header; confiar nele só vindo do loopback é o que impede alguém na LAN de forjar o IP no
+log.
 
-- **`set_real_ip_from` + `real_ip_header CF-Connecting-IP`** — sem isso todo acesso
-  aparece no log com IP da Cloudflare em vez do IP de quem visitou.
-- **`geo $realip_remote_addr`** — a lista de origens permitidas precisa olhar o IP de quem
-  *abriu a conexão*. O padrão do `geo` é `$remote_addr`, que o `real_ip_header` já
-  reescreveu para o visitante final; usar o padrão daria 403 em todo acesso legítimo.
-- **`listen 443 ssl http2`** — no nginx 1.22 do Debian 12 o http2 é sufixo do `listen`.
-  A diretiva `http2 on;` só existe a partir da 1.25.1.
-- O vhost do OpenMediaVault é o `default_server` da porta 80 e não é tocado.
+### O túnel
+
+Criado no painel (Zero Trust → Networks → Tunnels), gerenciado remotamente: o roteamento
+`ifsc.sohan.sbs → http://localhost:8800` fica na Cloudflare, e o registro DNS é um CNAME
+para `<id>.cfargotunnel.com` que ela mesma cria. No servidor só existe o serviço:
+
+```bash
+systemctl status cloudflared      # deve estar active (running)
+journalctl -u cloudflared -n 50   # logs; "Registered tunnel connection" = conectado
+```
+
+Trocar de servidor: instale o `cloudflared` (repositório apt `pkg.cloudflare.com`) e rode
+`cloudflared service install <token>` com o token do túnel, que fica no painel.
 
 ### Acesso pela rede local
 
 `http://192.168.88.42:8800` — sem DNS, sem Cloudflare, sem TLS. Útil quando a internet
 está fora ou para testar antes de publicar.
-
-### Renovação do certificado
-
-Não tem. O Origin Certificate vale 15 anos e o certificado que o visitante vê é gerenciado
-pela Cloudflare. Se um dia sair da Cloudflare, aí sim volta a fazer sentido o certbot —
-e nesse caso pelo desafio DNS-01, nunca HTTP-01, enquanto a porta 80 estiver bloqueada.
 
 > O progresso de cada pessoa fica no `localStorage` do navegador dela. Publicar o site não
 > junta nem compartilha progresso entre quem usa — cada dispositivo tem o seu.
