@@ -107,12 +107,29 @@ instruída a conectar nela.
 visitante ──443──> Cloudflare ──25443──> roteador ──25443──> nginx (TLS, cert de origem)
 ```
 
-No painel da Cloudflare isso são três coisas, todas no plano Free:
+A rede tem dois roteadores em cascata, e a porta precisa ser encaminhada nos dois:
+
+```
+internet → Zen (roteador da operadora, 192.168.1.1) → MikroTik "silasServer" (ether1 = 192.168.1.2) → switch → servidor
+           regra "site-silas": TCP 25443 → 192.168.1.2      regra dstnat: TCP 25443 in ether1 → 192.168.88.42
+```
+
+No painel da Cloudflare isso são quatro coisas, todas no plano Free:
 
 1. **DNS**: `A  ifsc  200.152.8.138`, **Proxied** (nuvem laranja).
-2. **Rules → Origin Rules**: quando `Hostname equals ifsc.sohan.sbs` → **Destination
-   port → Rewrite to 25443**.
-3. **SSL/TLS**: **Full (strict)**.
+2. **Rules → Origin Rules**: quando **`Hostname` equals `ifsc.sohan.sbs`** → **Destination
+   port → Rewrite to 25443**. Atenção ao campo: o wizard sugere "URI Full", e um wildcard
+   `ifsc.sohan.sbs` em URI Full nunca casa (a URI inteira é `https://ifsc.sohan.sbs/...`).
+   A regra fica ativa, com a porta certa, e não se aplica a nada — sintoma: 522. Custou
+   uma tarde.
+3. **SSL/TLS → Overview**: **Full (strict)**.
+4. **SSL/TLS → Edge Certificates → Always Use HTTPS**: ligado, senão `http://` abre sem
+   redirecionar e o navegador mostra "não seguro".
+
+Para diagnosticar de fora sem depender de ferramenta local (que cai no hairpin):
+`check-host.net` — `check-tcp` na porta e `check-http` na URL. Um `403` direto em
+`https://200.152.8.138:25443` é o nginx recusando IP fora da lista da Cloudflare, ou
+seja, o caminho até o servidor está inteiro.
 
 O visitante nunca vê a 25443 — usa `https://ifsc.sohan.sbs` normal, e `http://` também
 funciona porque quem atende a 80 do visitante é a Cloudflare.
