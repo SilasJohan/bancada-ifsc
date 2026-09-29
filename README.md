@@ -84,11 +84,11 @@ Os arquivos em `deploy/` já estão preenchidos para a instalação real:
 | Domínio | `ifsc.sohan.sbs` (DNS na Cloudflare, proxy ligado) |
 | Servidor | `root@192.168.88.42`, SSH na porta 2222 (Debian 12, x86_64) |
 | Pasta | `/var/www/bancada-ifsc` |
-| nginx | **8443** com TLS (origem), **8800** HTTP só para a LAN |
-| Roteador | port-forward externo 8443 → `192.168.88.42:8443` |
+| nginx | **25443** com TLS (origem), **8800** HTTP só para a LAN |
+| Roteador | port-forward externo 25443 → `192.168.88.42:25443` |
 | IP público | `200.152.8.138` (Directnet, AS28590) |
 
-### Por que a origem está na 8443
+### Por que a origem está na 25443
 
 A operadora deste link **descarta as portas 80 e 443 de entrada**. Medido com
 `check-host.net` de 39 pontos do mundo: 0 alcançam a 443, 0 alcançam a 80, e 12 de 12
@@ -104,17 +104,17 @@ A solução: a origem escuta numa porta que a operadora deixa passar, e a Cloudf
 instruída a conectar nela.
 
 ```
-visitante ──443──> Cloudflare ──8443──> roteador ──8443──> nginx (TLS, cert de origem)
+visitante ──443──> Cloudflare ──25443──> roteador ──25443──> nginx (TLS, cert de origem)
 ```
 
 No painel da Cloudflare isso são três coisas, todas no plano Free:
 
 1. **DNS**: `A  ifsc  200.152.8.138`, **Proxied** (nuvem laranja).
 2. **Rules → Origin Rules**: quando `Hostname equals ifsc.sohan.sbs` → **Destination
-   port → Rewrite to 8443**.
+   port → Rewrite to 25443**.
 3. **SSL/TLS**: **Full (strict)**.
 
-O visitante nunca vê a 8443 — usa `https://ifsc.sohan.sbs` normal, e `http://` também
+O visitante nunca vê a 25443 — usa `https://ifsc.sohan.sbs` normal, e `http://` também
 funciona porque quem atende a 80 do visitante é a Cloudflare.
 
 ### Certificado
@@ -158,7 +158,7 @@ Detalhes que o arquivo resolve e são fáceis de perder:
   reescreveu para o visitante final; usar o padrão daria 403 em todo acesso legítimo.
   A lista inclui `200.152.8.138` porque acesso de dentro de casa chega por hairpin com o
   IP público como origem.
-- **`listen 8443 ssl http2`** — no nginx 1.22 do Debian 12 o http2 é sufixo do `listen`.
+- **`listen 25443 ssl http2`** — no nginx 1.22 do Debian 12 o http2 é sufixo do `listen`.
   A diretiva `http2 on;` só existe a partir da 1.25.1.
 
 ### Acesso pela rede local
