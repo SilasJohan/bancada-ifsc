@@ -81,34 +81,49 @@ Os arquivos em `deploy/` já estão preenchidos para a instalação real:
 
 | | |
 |---|---|
-| Domínio | `ifsc.sohan.sbs` (DNS na Cloudflare) |
+| Domínio | `ifsc.sohan.sbs` (DNS na Cloudflare, proxy ligado) |
 | Servidor | `root@192.168.88.42`, SSH na porta 2222 (Debian 12, x86_64) |
 | Pasta | `/var/www/bancada-ifsc` |
-| nginx | porta **8800**, HTTP puro, só localhost e LAN |
-| Exposição | **Cloudflare Tunnel** (`cloudflared` como serviço systemd) |
+| nginx | **8443** com TLS (origem), **8800** HTTP só para a LAN |
+| Roteador | port-forward externo 8443 → `192.168.88.42:8443` |
+| IP público | `200.152.8.138` (Directnet, AS28590) |
 
-### Por que um túnel, e não port-forward
+### Por que a origem está na 8443
 
-A operadora deste link (Directnet, AS28590) **descarta as portas 80 e 443 de entrada**.
-Medido com `check-host.net` de 39 pontos do mundo: 0 alcançam a 443, 0 alcançam a 80, e
-12 de 12 alcançam a 25565 (Minecraft) — ou seja, o roteador encaminha bem; é a operadora
-que filtra as duas portas web.
+A operadora deste link **descarta as portas 80 e 443 de entrada**. Medido com
+`check-host.net` de 39 pontos do mundo: 0 alcançam a 443, 0 alcançam a 80, e 12 de 12
+alcançam a 25565 (Minecraft) — o roteador encaminha bem; é a operadora que filtra as duas
+portas web.
 
 Cuidado com um falso positivo que custou tempo: testar `https://200.152.8.138` **de dentro
 da própria rede** funciona, porque o roteador faz hairpin NAT. Isso inclui qualquer
 ferramenta que rode na sua máquina. Só um ponto de vista realmente externo (celular no 4G,
-`check-host.net`) diz a verdade sobre a porta.
+`check-host.net`) diz a verdade sobre uma porta.
 
-Com as duas portas mortas, "expor o nginx" não é uma opção. O `cloudflared` abre uma
-conexão de **saída** para a Cloudflare e os visitantes chegam por ela:
+A solução: a origem escuta numa porta que a operadora deixa passar, e a Cloudflare é
+instruída a conectar nela.
 
 ```
-visitante ──443──> Cloudflare <══túnel══ cloudflared (servidor) ──http──> nginx :8800
+visitante ──443──> Cloudflare ──8443──> roteador ──8443──> nginx (TLS, cert de origem)
 ```
 
-Consequências boas: nenhum port-forward (pode apagar os de 80/443 no roteador), IP
-residencial escondido, IP dinâmico irrelevante, HTTPS gerido pela Cloudflare, e `http://`
-também funciona. Nada de certbot — não há certificado no servidor.
+No painel da Cloudflare isso são três coisas, todas no plano Free:
+
+1. **DNS**: `A  ifsc  200.152.8.138`, **Proxied** (nuvem laranja).
+2. **Rules → Origin Rules**: quando `Hostname equals ifsc.sohan.sbs` → **Destination
+   port → Rewrite to 8443**.
+3. **SSL/TLS**: **Full (strict)**.
+
+O visitante nunca vê a 8443 — usa `https://ifsc.sohan.sbs` normal, e `http://` também
+funciona porque quem atende a 80 do visitante é a Cloudflare.
+
+### Certificado
+
+Nada de certbot: o desafio HTTP-01 precisa da porta 80, que não chega. O servidor usa um
+**Origin Certificate da Cloudflare** (`/etc/nginx/cloudflare/origin.{crt,key}`), válido até
+2041, emitido a partir de um CSR gerado no próprio servidor — a chave privada nunca saiu de
+lá. Só a Cloudflare confia nesse certificado, o que é exatamente o necessário: ninguém
+mais deveria falar com a origem. Renovação: não tem.
 
 ### Deploy do conteúdo
 
@@ -130,27 +145,21 @@ nginx -t && systemctl reload nginx
 ```
 
 `deploy/nginx.conf` é a fonte da verdade — nada edita esse arquivo no servidor, então
-sobrescrever é sempre seguro. O vhost do OpenMediaVault é o `default_server` da porta 80 e
-não é tocado.
+sobrescrever é sempre seguro. (Foi por isso que evitamos `certbot --nginx`: ele reescreve
+o arquivo no servidor, e o próximo `scp` apagaria o bloco TLS.) O vhost do OpenMediaVault
+é o `default_server` da porta 80 e não é tocado.
 
-O único detalhe não óbvio no arquivo: `set_real_ip_from 127.0.0.1` + `real_ip_header
-CF-Connecting-IP`. O cloudflared conecta de localhost e manda o IP do visitante nesse
-header; confiar nele só vindo do loopback é o que impede alguém na LAN de forjar o IP no
-log.
+Detalhes que o arquivo resolve e são fáceis de perder:
 
-### O túnel
-
-Criado no painel (Zero Trust → Networks → Tunnels), gerenciado remotamente: o roteamento
-`ifsc.sohan.sbs → http://localhost:8800` fica na Cloudflare, e o registro DNS é um CNAME
-para `<id>.cfargotunnel.com` que ela mesma cria. No servidor só existe o serviço:
-
-```bash
-systemctl status cloudflared      # deve estar active (running)
-journalctl -u cloudflared -n 50   # logs; "Registered tunnel connection" = conectado
-```
-
-Trocar de servidor: instale o `cloudflared` (repositório apt `pkg.cloudflare.com`) e rode
-`cloudflared service install <token>` com o token do túnel, que fica no painel.
+- **`set_real_ip_from` + `real_ip_header CF-Connecting-IP`** — sem isso todo acesso
+  aparece no log com IP da Cloudflare em vez do IP de quem visitou.
+- **`geo $realip_remote_addr`** — a lista de origens permitidas precisa olhar o IP de quem
+  *abriu a conexão*. O padrão do `geo` é `$remote_addr`, que o `real_ip_header` já
+  reescreveu para o visitante final; usar o padrão daria 403 em todo acesso legítimo.
+  A lista inclui `200.152.8.138` porque acesso de dentro de casa chega por hairpin com o
+  IP público como origem.
+- **`listen 8443 ssl http2`** — no nginx 1.22 do Debian 12 o http2 é sufixo do `listen`.
+  A diretiva `http2 on;` só existe a partir da 1.25.1.
 
 ### Acesso pela rede local
 
