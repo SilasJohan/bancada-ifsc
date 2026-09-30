@@ -78,6 +78,37 @@ function diasAte(d) { return Math.ceil((d - new Date()) / 86400000); }
 /* ============================ seleção de questões ============================ */
 function bancoPorArea(a) { return BANCO.filter(q => q.area === a); }
 
+function embaralhar(v) {
+  const a = v.slice();
+  for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
+  return a;
+}
+/* do menos recente para o mais recente: nunca vistas primeiro, empate resolvido no sorteio */
+function porFrescor(lista) {
+  const visto = q => (S.cards[chaveCard(q)] || {}).visto || "";
+  return embaralhar(lista).sort((a, b) => visto(a) < visto(b) ? -1 : visto(a) > visto(b) ? 1 : 0);
+}
+/* cópia da questão com as alternativas em nova ordem e a certa na posição `alvo`;
+   as letras citadas no porque como {A}…{E} acompanham a troca */
+function variante(q, alvo) {
+  if (q.gerada) return q;                       // os geradores já sorteiam números e ordem
+  const resto = embaralhar([0, 1, 2, 3, 4].filter(i => i !== q.correta));
+  const ordem = resto.slice(0, alvo).concat(q.correta, resto.slice(alvo));
+  return Object.assign({}, q, {
+    alts: ordem.map(i => q.alts[i]),
+    correta: alvo,
+    porque: q.porque.replace(/\{([A-E])\}/g, (m, l) => "ABCDE"[ordem.indexOf("ABCDE".indexOf(l))])
+  });
+}
+/* reparte as letras certas por igual na sessão (ninguém acerta "chutando B") */
+function variarLetras(fila) {
+  let posicoes = [];
+  return fila.map(q => {
+    if (!posicoes.length) posicoes = embaralhar([0, 1, 2, 3, 4]);
+    return variante(q, posicoes.pop());
+  });
+}
+
 function sessao(n) {
   const h = hojeISO(), fila = [], usados = new Set();
   // 1) o que venceu hoje, do mais atrasado para o mais recente
@@ -99,17 +130,18 @@ function sessao(n) {
     } else { const q = cand[Math.floor(Math.random() * cand.length)]; fila.push(q); usados.add(q.id); }
     volta++;
   }
-  return fila.slice(0, n);
+  return variarLetras(fila.slice(0, n));
 }
 
 function montarSimulado() {
   const p = [];
   ORDEM.forEach(a => {
     if (a === "mat") { for (let i = 0; i < 7; i++) p.push(gerarQuestao(i * 3 + Math.floor(Math.random() * 3))); return; }
-    const pool = bancoPorArea(a).slice().sort(() => Math.random() - 0.5);
+    // as menos vistas primeiro: o simulado não repete o que o treino acabou de mostrar
+    const pool = porFrescor(bancoPorArea(a));
     for (let i = 0; i < 7; i++) p.push(pool[i % pool.length]);
   });
-  return p;   // já na ordem oficial: 1-7 port, 8-14 mat, 15-21 gh, 22-28 cie
+  return variarLetras(p);   // já na ordem oficial: 1-7 port, 8-14 mat, 15-21 gh, 22-28 cie
 }
 
 /* ============================ utilidades de render ============================ */
@@ -585,6 +617,7 @@ function telaErros() {
       if (k.startsWith("GEN:")) { const gi = GERADORES.findIndex(f => f.name === k.split(":")[1]); return gi >= 0 ? gerarQuestao(gi) : null; }
       return BANCO.find(x => x.id === k);
     }).filter(Boolean);
+    fila.splice(0, fila.length, ...variarLetras(fila));
     limpar();
     tela.append(topo("Revisão de erros", "As " + fila.length + " que mais te custaram, de novo."));
     const palco = el("div");

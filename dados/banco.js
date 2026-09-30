@@ -1,6 +1,8 @@
 /* Banco de questões — IFSC Exame de Classificação (Técnico Integrado)
    Calibrado pela frequência real observada nas provas 2023.2 a 2026.2.
    Formato: {id, area, topico, nivel(1-3), enunciado, alts[5], correta(0-4), porque}
+   As alternativas são embaralhadas a cada exibição: no porque, cite a letra ORIGINAL
+   entre chaves ({A}…{E}) para que ela seja trocada pela letra que aparece na tela.
    area: mat | cie | gh | port                                                  */
 window.BANCO = [
 
@@ -23,7 +25,7 @@ window.BANCO = [
 {id:"M04",area:"mat",topico:"Notação científica",nivel:1,
  enunciado:"A espessura de uma trilha de placa de circuito impresso é de 0,00035 m. Em notação científica, esse valor é:",
  alts:["3,5 × 10⁻³ m","35 × 10⁻³ m","3,5 × 10⁻⁴ m","0,35 × 10⁻³ m","3,5 × 10⁴ m"],correta:2,
- porque:"Notação científica exige um único algarismo diferente de zero antes da vírgula. 0,00035 → mova a vírgula 4 casas para a direita → 3,5 e o expoente é −4. As opções B e D têm a mantissa fora do padrão (35 e 0,35)."},
+ porque:"Notação científica exige um único algarismo diferente de zero antes da vírgula. 0,00035 → mova a vírgula 4 casas para a direita → 3,5 e o expoente é −4. As opções {B} e {D} têm a mantissa fora do padrão (35 e 0,35)."},
 
 {id:"M05",area:"mat",topico:"Probabilidade",nivel:2,
  enunciado:"No baralho de um jogo de cartas restam 40 cartas, das quais 12 são cartas de Energia. Comprando uma carta ao acaso, qual a probabilidade de sair uma Energia?",
@@ -94,7 +96,7 @@ window.BANCO = [
 {id:"C03",area:"cie",topico:"Propagação de calor",nivel:2,
  enunciado:"Uma caixa térmica mantém o lanche quente por horas. O principal princípio físico envolvido é:",
  alts:["A caixa gera calor continuamente.","As paredes isolantes dificultam a condução e a convecção, reduzindo a troca de calor com o ambiente.","A caixa transforma energia térmica em energia química.","O ar dentro da caixa é um bom condutor térmico.","A caixa impede totalmente a irradiação e o calor nunca sai."],correta:1,
- porque:"Isolante térmico não cria nem retém calor magicamente: ele apenas dificulta a transferência, tornando-a lenta. Por isso a caixa mantém tanto o quente quanto o frio. A alternativa E erra no ‘totalmente’ e ‘nunca’ — com tempo suficiente o equilíbrio térmico sempre chega."},
+ porque:"Isolante térmico não cria nem retém calor magicamente: ele apenas dificulta a transferência, tornando-a lenta. Por isso a caixa mantém tanto o quente quanto o frio. A alternativa {E} erra no ‘totalmente’ e ‘nunca’ — com tempo suficiente o equilíbrio térmico sempre chega."},
 
 {id:"C04",area:"cie",topico:"Propagação de calor",nivel:1,
  enunciado:"Ao aquecer água numa panela no fogão, a água do fundo sobe e a de cima desce, formando um ciclo. Esse tipo de propagação de calor chama-se:",
@@ -104,7 +106,7 @@ window.BANCO = [
 {id:"C05",area:"cie",topico:"Transformação de energia",nivel:2,
  enunciado:"Em uma usina hidrelétrica, qual é a sequência CORRETA de transformações de energia?",
  alts:["Química → térmica → elétrica","Potencial gravitacional → cinética → elétrica","Cinética → potencial → química","Elétrica → mecânica → térmica","Nuclear → térmica → elétrica"],correta:1,
- porque:"A água represada no alto tem energia potencial gravitacional; ao cair ela vira energia cinética; a turbina e o gerador convertem essa energia cinética em elétrica. A opção A descreve uma termelétrica a combustível e a E, uma usina nuclear."},
+ porque:"A água represada no alto tem energia potencial gravitacional; ao cair ela vira energia cinética; a turbina e o gerador convertem essa energia cinética em elétrica. A opção {A} descreve uma termelétrica a combustível e a {E}, uma usina nuclear."},
 
 {id:"C06",area:"cie",topico:"Fontes de energia",nivel:2,
  enunciado:"Analise as afirmações sobre fontes de energia:\nI. A energia eólica é renovável e não emite gases de efeito estufa durante a geração.\nII. O carvão mineral é uma fonte renovável, pois se forma continuamente no solo.\nIII. A matriz elétrica brasileira é predominantemente hidrelétrica.\nEstá(ão) correta(s):",
@@ -144,7 +146,7 @@ window.BANCO = [
 {id:"C13",area:"cie",topico:"Fotossíntese",nivel:2,
  enunciado:"A equação simplificada da fotossíntese é: 6 CO₂ + 6 H₂O + luz → C₆H₁₂O₆ + 6 O₂. Com base nela, é correto afirmar que:",
  alts:["a planta consome oxigênio e libera gás carbônico.","a energia luminosa é convertida em energia química armazenada na glicose.","a fotossíntese ocorre nas mitocôndrias.","o processo não depende de água.","a glicose produzida é liberada para a atmosfera."],correta:1,
- porque:"A fotossíntese é essencialmente uma conversão de energia luminosa em energia química (ligações da glicose), realizada nos cloroplastos. A alternativa A inverte com a respiração celular. C confunde cloroplasto (fotossíntese) com mitocôndria (respiração). D contraria a própria equação, onde H₂O é reagente."},
+ porque:"A fotossíntese é essencialmente uma conversão de energia luminosa em energia química (ligações da glicose), realizada nos cloroplastos. A alternativa {A} inverte com a respiração celular. {C} confunde cloroplasto (fotossíntese) com mitocôndria (respiração). {D} contraria a própria equação, onde H₂O é reagente."},
 
 {id:"C14",area:"cie",topico:"Respiração celular",nivel:2,
  enunciado:"Considere o esquema: glicose + oxigênio → gás carbônico + água + ATP. Sobre esse processo, assinale a afirmativa CORRETA:",
@@ -169,7 +171,7 @@ window.BANCO = [
 {id:"C18",area:"cie",topico:"Evolução",nivel:2,
  enunciado:"Sobre as teorias evolutivas, assinale a alternativa CORRETA:",
  alts:["Para Lamarck, as variações surgem ao acaso e o ambiente seleciona as vantajosas.","Para Darwin, o uso e desuso dos órgãos gera características que são transmitidas aos descendentes.","Para Darwin, existe variabilidade na população e o ambiente seleciona os indivíduos mais adaptados, que deixam mais descendentes.","A Teoria Sintética da Evolução rejeitou completamente as ideias de Darwin.","A evolução tem um objetivo final definido: produzir espécies perfeitas."],correta:2,
- porque:"As alternativas A e B trocaram os autores de lugar — é a pegadinha padrão. Lamarck: uso e desuso + herança dos caracteres adquiridos (refutada). Darwin: variabilidade preexistente + seleção natural. A Teoria Sintética (neodarwinismo) SOMOU genética e mutação ao darwinismo, não o rejeitou. E evolução não tem finalidade nem direção — é adaptação ao ambiente atual."},
+ porque:"As alternativas {A} e {B} trocaram os autores de lugar — é a pegadinha padrão. Lamarck: uso e desuso + herança dos caracteres adquiridos (refutada). Darwin: variabilidade preexistente + seleção natural. A Teoria Sintética (neodarwinismo) SOMOU genética e mutação ao darwinismo, não o rejeitou. E evolução não tem finalidade nem direção — é adaptação ao ambiente atual."},
 
 {id:"C19",area:"cie",topico:"Astronomia",nivel:2,
  enunciado:"Um astronauta de 80 kg vai à Lua. Sobre sua massa e seu peso, é correto afirmar:",
@@ -310,7 +312,7 @@ window.BANCO = [
 {id:"G18",area:"gh",topico:"Colonização",nivel:2,
  enunciado:"O trecho da Carta de Pero Vaz de Caminha (1500) é frequentemente usado como “mito de fundação” do Brasil. A crítica historiográfica atual a esse uso aponta que:",
  alts:["A carta é um relato neutro e completo dos fatos.","A carta é um documento produzido do ponto de vista do colonizador europeu, que descreve os povos originários como ingênuos e disponíveis à catequese, invisibilizando sua história prévia e legitimando a ocupação do território.","A carta foi escrita por um indígena.","A carta comprova que o território estava vazio.","A carta não tem valor histórico algum."],correta:1,
- porque:"Todo documento histórico tem autor, intenção e destinatário — a carta foi escrita por um funcionário da Coroa, para o rei D. Manuel I, para justificar a empreitada. A leitura crítica não descarta a fonte (E está errada), mas pergunta quem fala, de onde e para quem. O ‘descobrimento’ pressupõe que só existe o que o europeu enxergou; por isso se prefere hoje falar em invasão, conquista ou encontro. Havia entre 2 e 5 milhões de pessoas no território."},
+ porque:"Todo documento histórico tem autor, intenção e destinatário — a carta foi escrita por um funcionário da Coroa, para o rei D. Manuel I, para justificar a empreitada. A leitura crítica não descarta a fonte ({E} está errada), mas pergunta quem fala, de onde e para quem. O ‘descobrimento’ pressupõe que só existe o que o europeu enxergou; por isso se prefere hoje falar em invasão, conquista ou encontro. Havia entre 2 e 5 milhões de pessoas no território."},
 
 {id:"G19",area:"gh",topico:"Urbanização",nivel:2,
  enunciado:"Sobre a urbanização brasileira, é correto afirmar que:",
@@ -386,7 +388,7 @@ window.BANCO = [
 {id:"P13",area:"port",topico:"Interpretação",nivel:3,
  enunciado:"Leia: “A tecnologia avançou tanto que hoje conseguimos nos comunicar com alguém do outro lado do mundo em segundos — e, ainda assim, muitas vezes não conversamos com quem está sentado ao nosso lado.” A ideia central do trecho é:",
  alts:["Elogiar o avanço tecnológico das comunicações.","Apontar um paradoxo: o aumento da conectividade técnica não garante — e pode até dificultar — a proximidade nas relações presenciais.","Defender o fim do uso de celulares.","Comparar velocidades de conexão de internet.","Criticar quem mora longe da família."],correta:1,
- porque:"O eixo do trecho é o conectivo ‘e, ainda assim’, que marca contraste e instala o paradoxo. A alternativa A capta só a primeira metade; C e E extrapolam, atribuindo ao texto uma defesa que ele não faz. Regra de ouro da interpretação no IFSC: a resposta certa é a que cabe INTEIRA dentro do texto — nem menos (parcial) nem mais (extrapolação)."},
+ porque:"O eixo do trecho é o conectivo ‘e, ainda assim’, que marca contraste e instala o paradoxo. A alternativa {A} capta só a primeira metade; {C} e {E} extrapolam, atribuindo ao texto uma defesa que ele não faz. Regra de ouro da interpretação no IFSC: a resposta certa é a que cabe INTEIRA dentro do texto — nem menos (parcial) nem mais (extrapolação)."},
 
 {id:"P14",area:"port",topico:"Morfologia",nivel:2,
  enunciado:"Na frase “Ele chegou muito cedo à oficina”, as palavras “muito” e “cedo” são, respectivamente:",
@@ -396,5 +398,5 @@ window.BANCO = [
 {id:"P15",area:"port",topico:"Coerência",nivel:2,
  enunciado:"Assinale o período em que há problema de COERÊNCIA:",
  alts:["Estudou bastante e foi aprovado no exame.","Choveu muito, por isso as ruas ficaram alagadas.","Ele é vegetariano, portanto come carne todos os dias.","Como estava cansado, foi dormir cedo.","Não estudou, mas mesmo assim foi bem na prova."],correta:2,
- porque:"Coerência é a compatibilidade lógica entre as ideias. Em C, o conectivo conclusivo ‘portanto’ liga duas informações que se contradizem — ser vegetariano e comer carne diariamente. Note que a frase está gramaticalmente perfeita: coesão (a costura formal) e coerência (o sentido) são coisas distintas, e a prova gosta de apresentar frases bem construídas mas logicamente impossíveis."}
+ porque:"Coerência é a compatibilidade lógica entre as ideias. Em {C}, o conectivo conclusivo ‘portanto’ liga duas informações que se contradizem — ser vegetariano e comer carne diariamente. Note que a frase está gramaticalmente perfeita: coesão (a costura formal) e coerência (o sentido) são coisas distintas, e a prova gosta de apresentar frases bem construídas mas logicamente impossíveis."}
 ];
