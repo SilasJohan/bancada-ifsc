@@ -168,6 +168,11 @@ function renderQuestao(q, opts) {
   const dir = el("span", "dir", opts.rotulo || (q.gerada ? "gerada" : q.id));
   cab.append(dir);
   box.append(cab);
+  if (q.texto) {                               // texto-base, como no caderno oficial
+    const t = el("blockquote", "texto-base", q.texto);
+    if (q.fonte) t.append(el("cite", null, "Fonte: " + q.fonte));
+    box.append(t);
+  }
   box.append(el("div", "enunciado", q.enunciado));
 
   const alts = el("div", "alts");
@@ -651,13 +656,13 @@ function telaErros() {
 /* ============================ TELA: plano ============================ */
 const SEMANAS = [
   ["1", "24/09–30/09", "Simulado diagnóstico (prova 2026.1 em PDF, cronometrada). Inscrição no dia 28/09. Depois: matemática — área/volume e porcentagem."],
-  ["2", "01/10–07/10", "Matemática: razão, proporção, regra de três e leitura de gráfico. Geo/Hist: bloco Escravidão, resistência e abolicionismo."],
-  ["3", "08/10–14/10", "Matemática: sistemas do 1º grau e conversão de unidades. Geo/Hist: bloco Santa Catarina — Contestado, colonização, regiões."],
-  ["4", "15/10–21/10", "Ciências: energia, transformações, propagação de calor e eletricidade. Química básica. Conferir pagamento da inscrição até 22/10."],
-  ["5", "22/10–28/10", "Ciências: célula, fotossíntese, respiração celular, corpo humano, vacinas e ISTs. Astronomia."],
-  ["6", "29/10–04/11", "Geo/Hist: nazifascismo, Era Vargas, Ditadura Militar, Guerra Fria. Globalização e mundo do trabalho. Biomas e questões ambientais."],
-  ["7", "05/11–11/11", "Simulado 2 (prova 2025.1) no domingo. Na semana: caderno de erro + 7 questões de interpretação por dia."],
-  ["8", "12/11–18/11", "Simulado 3 (prova 2025.2) no domingo. Na semana: caderno de erro + drill de matemática nos arquétipos ainda vermelhos."],
+  ["2", "01/10–07/10", "Matemática: razão, proporção, regra de três e leitura de gráfico. Geo/Hist: escravidão, resistência e abolicionismo + expansão marítima e colonização da América (Caminha, Tordesilhas, povos originários)."],
+  ["3", "08/10–14/10", "Matemática: sistemas do 1º grau e conversão de unidades. Geo/Hist: Santa Catarina — Contestado, colonização, regiões, clima. Uma sessão leve de História Antiga, Idade Média e expansão islâmica, Renascimento e Reforma/Contrarreforma."],
+  ["4", "15/10–21/10", "Ciências: energia, transformações, propagação de calor e eletricidade. Química básica. Geo/Hist (2 sessões): Estados Nacionais e absolutismo, Iluminismo, revoluções burguesas e independências na América (Haiti, hispânicas, EUA). Conferir pagamento da inscrição até 22/10."],
+  ["5", "22/10–28/10", "Ciências: célula, fotossíntese, respiração celular, corpo humano, vacinas e ISTs. Astronomia. Geo/Hist (2 sessões): Revolução Industrial e imperialismo europeu na África e na Ásia."],
+  ["6", "29/10–04/11", "Geo/Hist: Primeira Guerra, entreguerras e crise de 1929, totalitarismos, Segunda Guerra, Era Vargas, Ditadura Militar, Guerra Fria."],
+  ["7", "05/11–11/11", "Simulado 2 (prova 2025.1) no domingo. Geo/Hist: independências na África e na Ásia, imperialismos dos séculos XX e XXI, contracultura e direitos humanos; globalização, trabalho, biomas e ambiente. Mais caderno de erro + 7 questões de interpretação por dia."],
+  ["8", "12/11–18/11", "Simulado 3 (prova 2025.2) no domingo. Na semana: caderno de erro + drill de matemática nos arquétipos ainda vermelhos. Mapa do edital: nenhum tópico de Geo/Hist pode ficar sem ter sido visto."],
   ["9", "19/11–25/11", "Simulado 4 (prova 2024.1) no domingo. Na semana: só o caderno de erro, só o que continua vermelho."],
   ["—", "26/11–28/11", "Quinta: revisão leve das fórmulas e do bloco SC, 30 min. Sexta: releitura do caderno de erro, 30 min, nada novo. Sábado: zero estudo, separar documento com foto e caneta preta, dormir cedo."]
 ];
@@ -740,7 +745,12 @@ const MAPA = [
   ["gh","Globalização, capitalismo e mundo do trabalho","alta","≈1 por prova"],
   ["gh","Direitos humanos, desigualdade, gênero, povos originários","alta","≈1 por prova"],
   ["gh","Cartografia e linguagem gráfica","media","escala, curvas de nível, leitura de mapa"],
-  ["gh","História Antiga, Medieval e Moderna","media","costuma vir em uma questão de contexto amplo"],
+  ["gh","Colonização da América e expansão marítima","media","caiu em 2026.2 (Carta de Caminha) — porta de entrada da História Geral na prova"],
+  ["gh","Iluminismo, revoluções burguesas e independências na América","media","raro isolado; sustenta as questões de direitos humanos e de escravidão (Haiti)"],
+  ["gh","Revolução Industrial, imperialismo e descolonização da África e da Ásia","media","raro isolado; volta como pano de fundo de trabalho, tecnologia e recursos"],
+  ["gh","Guerras Mundiais, entreguerras e totalitarismos","media","nazismo caiu em 2026.1 — Versalhes e 1929 são o contexto cobrado"],
+  ["gh","Contracultura, direitos civis e imperialismos dos séculos XX e XXI","media","raro isolado; liga com racismo, direitos humanos e geopolítica atual"],
+  ["gh","Antiguidade, Idade Média e expansão islâmica, Renascimento, Reforma, Estados Nacionais","baixa","está no Anexo V, mas não caiu como tema próprio de 2023.2 a 2026.2 — ler o Dossiê e fazer as questões"],
   ["cie","Energia: fontes, transformação, calor e eletricidade","alta","1 a 2 por prova — e é o seu terreno de eletrônica"],
   ["cie","Química: átomo, íons, misturas, transformação física x química","alta","1 a 2 por prova — bloco pequeno, 100% memorizável"],
   ["cie","Célula, fotossíntese e respiração celular","alta","≈2 por prova"],

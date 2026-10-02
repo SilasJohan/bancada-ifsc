@@ -187,9 +187,9 @@ cair, sem dizer o que *costuma* cair. Estudar por ele é gastar o mesmo tempo co
 
 | Camada | O que é | Profundidade exigida |
 |---|---|---|
-| **Núcleo** (29 tópicos) | Cai em toda prova, ou quase | Saber no automático, com detalhe. Somados, valem ~20 das 28 questões. |
-| **Órbita** (16 tópicos) | Cai em ~metade das provas | Saber bem, sem aprofundar |
-| **Cauda** (7 tópicos) | Está no edital, mas quase não cai | Ler uma vez, só para reconhecer e eliminar alternativa |
+| **Núcleo** (30 tópicos) | Cai em toda prova, ou quase | Saber no automático, com detalhe. Somados, valem ~20 das 28 questões. |
+| **Órbita** (21 tópicos) | Cai em ~metade das provas | Saber bem, sem aprofundar |
+| **Cauda** (14 tópicos) | Está no edital, mas quase não cai | Ler uma vez, só para reconhecer e eliminar alternativa |
 
 Cada tópico traz quatro coisas, e a ordem importa:
 

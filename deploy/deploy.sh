@@ -21,6 +21,7 @@ rsync -avz --delete \
   -e "ssh -p $SSH_PORT" \
   --exclude '.git' \
   --exclude 'deploy' \
+  --exclude 'ferramentas' \
   --exclude '.gitignore' \
   ./ "$DESTINO_HOST:$DESTINO_DIR/"
 

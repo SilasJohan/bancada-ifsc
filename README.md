@@ -15,7 +15,7 @@ O método completo está em [METODO.md](METODO.md). Este diretório é o app.
 | Simulado | 28 questões na ordem oficial (7+7+7+7) com cronômetro de 4h, correção e revisão questão a questão |
 | Caderno de erro | Tópicos ordenados por prejuízo, com sessão de revisão só dos erros |
 | Mapa do edital | Anexo V ordenado por frequência real nas provas de 2023.2 a 2026.2 |
-| **Dossiê** | Os 52 tópicos do edital em três camadas de profundidade — o que saber em detalhe, a armadilha de cada um e o teste de fogo em voz alta |
+| **Dossiê** | Os 65 tópicos do edital em três camadas de profundidade — o que saber em detalhe, a armadilha de cada um e o teste de fogo em voz alta |
 | Plano de 66 dias | Calendário semanal, links das provas oficiais em PDF e o protocolo do dia da prova |
 
 Progresso salvo em `localStorage` — fica no navegador, por dispositivo. Zerar só pelo
@@ -74,7 +74,7 @@ git add -A && git commit -m "novas questões de ciências" && git push
 
 ## Hospedar no seu servidor
 
-É estático puro — 228 KB, sem build, sem backend, sem banco. O único recurso externo são
+É estático puro — ~370 KB, sem build, sem backend, sem banco. O único recurso externo são
 as fontes do Google Fonts. Basta copiar a pasta e apontar o nginx para ela.
 
 Os arquivos em `deploy/` já estão preenchidos para a instalação real:
@@ -199,6 +199,21 @@ Edite `dados/banco.js` e acrescente objetos ao array:
 
 `area` é `mat`, `cie`, `gh` ou `port`. `correta` é o índice de 0 a 4. O `id` precisa ser
 único — ele é a chave do agendamento da repetição espaçada.
+
+Opcionais: `texto` (texto-base exibido antes do enunciado, como no caderno oficial) e
+`fonte` (só para citação real e verificável — texto escrito por você vai sem fonte).
+
+**Antes de publicar, rode o verificador:**
+
+```bash
+node ferramentas/checa-banco.js
+```
+
+Ele barra o vício que entrega a resposta sem saber o conteúdo: a certa ser a alternativa
+mais longa (na prova real as cinco têm tamanho parecido), a certa muito maior ou menor
+que a média das erradas, e "Todos os itens estão corretos" nunca ser a resposta nas
+questões de afirmativas. Ao acaso, a certa é a mais longa em ~20% das questões; o
+verificador recusa acima de 30%.
 
 Para um novo arquétipo de matemática, adicione uma função a `G` em `dados/gerador.js`.
 Ela deve devolver `{topico, enunciado, alts, correta, porque}`, e os distratores devem
