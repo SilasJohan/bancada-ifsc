@@ -974,6 +974,63 @@ btnTema.onclick = () => {
   document.documentElement.setAttribute("data-theme", S.tema);
   salvar();
 };
+/* levar o progresso para outro computador: baixa um .json e carrega de volta.
+   Carregar JUNTA com o que já existe aqui — nada é apagado. De cada questão
+   fica a revisão mais recente das duas máquinas. */
+document.getElementById("btn-exportar").onclick = () => {
+  const nome = "bancada-ifsc-" + hojeISO() + ".json";
+  const url = URL.createObjectURL(new Blob([JSON.stringify(S)], {type: "application/json"}));
+  const a = Object.assign(document.createElement("a"), {href: url, download: nome});
+  document.body.append(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+};
+
+function juntar(local, vindo) {
+  const r = Object.assign(vazio(), local, {              // cópia: não mexer no estado atual
+    cards: Object.assign({}, local.cards),
+    dias: Object.assign({}, local.dias),
+    simulados: (local.simulados || []).slice(),
+    dossie: Object.assign({}, local.dossie)
+  });
+  for (const [k, c] of Object.entries(vindo.cards || {})) {
+    const meu = r.cards[k];
+    // sem registro aqui, ou o outro computador revisou depois: fica o de lá
+    if (!meu || (c.visto || "") > (meu.visto || "") ||
+        ((c.visto || "") === (meu.visto || "") && (c.box || 0) > (meu.box || 0))) r.cards[k] = c;
+  }
+  for (const [dia, d] of Object.entries(vindo.dias || {})) {
+    const meu = r.dias[dia];
+    r.dias[dia] = meu ? {n: meu.n + d.n, a: meu.a + d.a} : d;
+  }
+  const vistos = new Set(r.simulados.map(s => s.data));
+  (vindo.simulados || []).forEach(s => { if (!vistos.has(s.data)) r.simulados.push(s); });
+  r.simulados.sort((a, b) => a.data - b.data);
+  for (const [k, dia] of Object.entries(vindo.dossie || {}))
+    if (!r.dossie[k] || dia < r.dossie[k]) r.dossie[k] = dia;   // vale a primeira vez que foi marcado
+  return r;
+}
+
+const arqImportar = document.getElementById("arq-importar");
+document.getElementById("btn-importar").onclick = () => arqImportar.click();
+arqImportar.onchange = () => {
+  const f = arqImportar.files[0];
+  if (!f) return;
+  const leitor = new FileReader();
+  leitor.onload = () => {
+    let vindo;
+    try { vindo = JSON.parse(leitor.result); } catch (e) { vindo = null; }
+    if (!vindo || !vindo.cards) { alert("Esse arquivo não é um progresso da Bancada IFSC."); arqImportar.value = ""; return; }
+    const antes = Object.keys(S.cards).length;
+    S = juntar(S, vindo); salvar();
+    const depois = Object.keys(S.cards).length;
+    alert("Progresso juntado: " + Object.keys(vindo.cards).length + " questões vieram do arquivo, " +
+          (depois - antes) + " eram novas aqui. Agora são " + depois + " no total.");
+    arqImportar.value = "";
+    ir("painel");
+  };
+  leitor.readAsText(f);
+};
+
 document.getElementById("btn-zerar").onclick = () => {
   if (confirm("Isso apaga todo o seu histórico de revisões, o caderno de erro e os simulados. Não dá para desfazer. Zerar mesmo?")) {
     S = vazio(); salvar(); ir("painel");

@@ -186,6 +186,15 @@ está fora ou para testar antes de publicar.
 > O progresso de cada pessoa fica no `localStorage` do navegador dela. Publicar o site não
 > junta nem compartilha progresso entre quem usa — cada dispositivo tem o seu.
 
+## Levar o progresso para outro computador
+
+Na barra lateral, **Salvar progresso** baixa um arquivo `bancada-ifsc-AAAA-MM-DD.json`.
+No outro computador, abra o site e use **Carregar progresso** para escolher esse arquivo.
+
+Carregar **junta** com o que já existe na máquina, não apaga nada: de cada questão fica a
+revisão mais recente das duas, os dias de estudo são somados, e simulados repetidos não
+duplicam. Dá para ir e voltar entre dois computadores quantas vezes quiser.
+
 ## Adicionar questões
 
 Edite `dados/banco.js` e acrescente objetos ao array:
